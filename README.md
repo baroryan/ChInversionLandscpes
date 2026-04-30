@@ -25,8 +25,8 @@ We highly recommend installing the code in a clean Conda environment:
 export PYTHONNOUSERSITE=1
 unset PYTHONPATH
 
-conda create -n landscapes -c conda-forge python=3.11 xtensor-python pip
-conda activate landscapes
+conda create -n invertchi -c conda-forge python=3.11 xtensor-python pip
+conda activate invertchi
 
 pip install taichi
 pip install numba
