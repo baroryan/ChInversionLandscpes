@@ -33,3 +33,4 @@ pip install numba
 pip install daggerpy
 pip install pyscabbard
 pip install numpy matplotlib xarray seaborn
+pip install "setuptools<81" --force-reinstall
