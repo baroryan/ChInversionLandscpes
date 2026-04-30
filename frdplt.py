@@ -8,8 +8,8 @@ Created on Sun Oct 22 14:49:04 2023
 import matplotlib.pyplot as plt
 import scabbard as scb
 import numpy as np
-import random
-import chiRiverFowardAllParamtersV5_bsplinePos as frd
+#import random
+import chifrd as frd
 from matplotlib.ticker import MaxNLocator
 from pyproj import Transformer, Proj
 from matplotlib.ticker import MaxNLocator, MultipleLocator

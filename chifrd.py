@@ -6,7 +6,7 @@ Created on Sat Sep 17 17:42:21 2022
 @author: bar
 """
 import numpy as np
-import upliftFunctionsV3_bsplinePos as upliftFunctions
+import upliftFunctions
 import numba as nb
 import math
 import time

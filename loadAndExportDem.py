@@ -4,7 +4,7 @@ import dagger as dag
 import scabbard as scb
 import pandas as pd
 import shapely.geometry
-import globalClimateModel
+#import globalClimateModel
 #import miscFunctions
 import pointsInSidePoly
 
