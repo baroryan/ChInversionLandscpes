@@ -1,20 +1,35 @@
 # Chi-Space Inversion for Detachment-Limited Landscapes
 
-This repository will host the code base and example workflows for performing inversions of detachment-limited landscapes in chi space.
+<p align="center">
+  <img src="figures/graphical_abstract.png" width="750">
+</p>
+
+<p align="center">
+  <em>Graphical overview of the chi-space inversion workflow for detachment-limited landscapes.</em>
+</p>
+
+This repository contains the codebase for performing inversions of detachment-limited landscapes in chi space. Example workflows will be uploaded shortly.
 
 The methods are based on:
 
 **Oryan et al. (2025)**  
 https://doi.org/10.1029/2024JB030819
 
-## Status
+## Installation
 
-Code, documentation, example workflows, and updated contact information will be uploaded shortly.
+This code requires `numba`, `daggerpy`, `pyscabbard`, `numpy`, `matplotlib`, `xarray`, and `seaborn`.
 
-In the meantime, the current code base can be retrieved from Zenodo:
+We highly recommend installing the code in a clean Conda environment:
 
-https://zenodo.org/records/14029506
+```bash
+export PYTHONNOUSERSITE=1
+unset PYTHONPATH
 
-Please note that the Zenodo archive does not currently include example workflows.
+conda create -n landscapes -c conda-forge python=3.11 xtensor-python pip
+conda activate landscapes
 
-We apologize for the delay.
+pip install taichi
+pip install numba
+pip install daggerpy
+pip install pyscabbard
+pip install numpy matplotlib xarray seaborn
