@@ -34,7 +34,8 @@ pip install daggerpy
 pip install pyscabbard
 pip install numpy matplotlib xarray seaborn
 pip install "setuptools<81" --force-reinstall 
-# if you would like to use jupyter notebook run pip install ipykernel
+pip install ipykernel #  if you would like to use jupyter notebook
+pip install ipympl # useful for interactive figuers 
 ```
 
 <sub>Tested with Python `3.11.15`.</sub>
@@ -48,6 +49,7 @@ A recommended starting point is:
 ```text
 examples/prepare_dem.ipynb
 examples/chi_space_inversion.ipynb
+```
 
 ## Disclaimer
 
