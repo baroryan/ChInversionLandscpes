@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import dagger as dag
 import scabbard as scb
 import pandas as pd
+from pathlib import Path
 import shapely.geometry
 #import globalClimateModel
 #import miscFunctions
@@ -28,7 +29,7 @@ class loadDEMDiet:
         self.demFilename=demFilename
         self.Z0=np.array(Z0).astype(ftype)
         self.A0=np.array(A0).astype(ftype)
-
+        self._validate_inputs(demFilename, Z0, A0)
         print ("Loading dem...",flush=True)
         dem = scb.raster2RGrid(self.demFilename)
         dem.compute_graphcon(SFD = True, BCs = None, LM = dag.LMR.priority_flood, preprocess_topo = True,Z0=Z0)
@@ -59,6 +60,7 @@ class loadDEMDiet:
         self.continentalDivide,self.basinID=dem.quick_basin_extraction(return_basinID = True)
         self.continentalDivide=pd.DataFrame(self.continentalDivide)
         self.RemoveBasinsTouchingBoundries(self.basinID)
+        print(f"Retrieved {len(self.riverData)} river nodes in {len(pd.unique(self.riverData.basinID))} basins", flush=True)
         # riversdata is a dict containing the followinf keys: 
         # 'nodes': river node ID in flat DEM referential
         # 'receivers': receiver ID in flat DEM referential
@@ -78,7 +80,16 @@ class loadDEMDiet:
         # riversData = {**dem.get_rivers_dict(), **dem.get_rivers_rowcolnode()}
         # self.riversData=pd.DataFrame(riversData)
 
-        
+    def _validate_inputs(self,demFilename, Z0, A0):
+        if not Path(demFilename).exists():
+            raise ValueError(f"demFilename does not exist: {demFilename}")
+        if not np.isscalar(Z0) or not np.isfinite(Z0):
+            raise ValueError(f"Z0 must be a finite number, got {Z0}")
+        if not np.isscalar(A0) or not np.isfinite(A0):
+            raise ValueError(f"A0 must be a finite number, got {A0}")
+        if A0 <= 0:
+            raise ValueError(f"A0 must be larger than 0, got {A0}")
+       
     def ComputeDrainageBaseOnVariable(self,variableP):
         if variableP.shape != self.shape:
             raise TypeError ("variable P is not the shape as DEM ")
@@ -108,11 +119,7 @@ class loadDEMDiet:
         climatePatternForDEM=rainfallWorld.sample_at_utm(longs,lats,espgCode)
         raindfallLocal=climatePatternForDEM.data.values
         #raindfallLocal=raindfallLocal/np.max(raindfallLocal)
-        
-
         DEM_with_climate=self.ReturnDEMWithClimate(raindfallLocal)
-        
-        
         return DEM_with_climate,climatePatternForDEM
         
         
