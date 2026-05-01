@@ -8,7 +8,7 @@
   <em>Graphical overview of the chi-space inversion workflow for detachment-limited landscapes.</em>
 </p>
 
-This repository contains the codebase for performing inversions of detachment-limited landscapes in chi space. Example workflows will be uploaded shortly.
+This repository contains the codebase for performing inversions of detachment-limited landscapes in chi space. 
 
 The methods are based on:
 
@@ -34,6 +34,23 @@ pip install daggerpy
 pip install pyscabbard
 pip install numpy matplotlib xarray seaborn
 pip install "setuptools<81" --force-reinstall 
+# if you would like to use jupyter notebook run pip install ipykernel
 ```
 
 <sub>Tested with Python `3.11.15`.</sub>
+
+## Usage
+
+Example workflows are slowly been added to the `examples/` directory.
+
+A recommended starting point is:
+
+```text
+examples/prepare_dem.ipynb
+examples/chi_space_inversion.ipynb
+
+## Disclaimer
+
+This repository was originally developed as personal research code. While the codebase has been updated, some parts may still be less user-friendly than a fully polished software package, and occasional glitches are expected.
+
+This is a work in progress. If you run into problems, please open an issue so they can be tracked and addressed.
