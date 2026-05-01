@@ -7,7 +7,7 @@ import shapely.geometry
 #import globalClimateModel
 #import miscFunctions
 import pointsInSidePoly
-
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 #%%
 def Rotate(x,y,theta):
     x=np.array(x)
@@ -203,17 +203,57 @@ class loadDEMDiet:
             
         return rivers
 
-    def PlotDEM(self,ax=None):
+    def PlotDEM(
+        self,
+        ax=None,
+        cmap="gist_earth",
+        colorbar=True,
+        cbar_size="3%",
+        cbar_pad=0.05,
+        fig_width=10,
+    ):
+        """
+        Plot DEM with an optional compact colorbar aligned to the axis.
+
+        If no axis is provided, the figure size is chosen to approximately match
+        the DEM aspect ratio.
+        """
+
+        import matplotlib.pyplot as plt
+        
+
+        extents = self.dem.extent()
+        xmin, xmax, ymin, ymax = extents
+
+        dem_width = xmax - xmin
+        dem_height = ymax - ymin
+        aspect_ratio = dem_height / dem_width
+
         if ax is None:
-            fig,ax=plt.subplots()
-        extents=self.dem.extent()
-        cb = ax.imshow(self.Z.reshape(self.dem.ny,self.dem.nx), cmap = "gist_earth", vmin =self.Z0, extent = extents)
-        plt.colorbar(cb, ax=ax, orientation='vertical')
-            # Adding hillshade in transparency
-       # ax.imshow(self.dem.hillshade.reshape(self.dem.ny,self.dem.nx), cmap = "gray", vmin =self.Z0, vmax = 255, alpha = 0.6, extent = extents)
-            
+            fig_height = fig_width * aspect_ratio
+            fig, ax = plt.subplots(figsize=(fig_width, fig_height))
+        else:
+            fig = ax.figure
+
+        im = ax.imshow(
+            self.Z.reshape(self.dem.ny, self.dem.nx),
+            cmap=cmap,
+            vmin=self.Z0,
+            extent=extents,
+            origin="upper",
+        )
+
         ax.set_xlabel("Easting (m)")
-        ax.set_ylabel("Northing (m)")       
+        ax.set_ylabel("Northing (m)")
+        ax.set_aspect("equal")
+
+        if colorbar:
+            divider = make_axes_locatable(ax)
+            cax = divider.append_axes("right", size=cbar_size, pad=cbar_pad)
+            cb = fig.colorbar(im, cax=cax, orientation="vertical")
+            cb.set_label("Elevation (m)")
+
+        return im,ax
         
     def PlotDivded(self,ax=None,printNumberOfBasins=500):
         if ax is None:
@@ -228,16 +268,27 @@ class loadDEMDiet:
             data=self.continentalDivide.loc[self.continentalDivide.basinID==uniqueID_i]
             ax.text(np.mean(data.X),np.mean(data.Y),str(uniqueID_i),ha='center', va='center')
             
-    def PlotDivdedByRivers(self,ax=None):
+    def PlotDivdedByRivers(self, ax=None, printNumberOfBasins=None):
         if ax is None:
-            fig,ax=plt.subplots()
-            
-        basinIDToPlot=pd.unique(self.riverData.basinID)
-       
-        for uniqueID_i in basinIDToPlot:
-            data=self.continentalDivide.loc[self.continentalDivide.basinID==uniqueID_i]
-            ax.text(np.mean(data.X),np.mean(data.Y),str(uniqueID_i),ha='center', va='center',color='magenta')
-            ax.scatter(data.X,data.Y,s=0.05,color='white')
+            fig, ax = plt.subplots()
+
+        basinIDToPlot = pd.unique(self.riverData.basinID)
+
+        if printNumberOfBasins is not None:
+            basin_sizes = self.continentalDivide[
+                self.continentalDivide.basinID.isin(basinIDToPlot)
+            ].groupby("basinID").size().sort_values(ascending=False)
+
+            basinIDToPlot = basin_sizes.index[:printNumberOfBasins]
+
+        for basinID in basinIDToPlot:
+            data = self.continentalDivide[self.continentalDivide.basinID == basinID]
+            if data.empty:
+                continue
+
+            ax.text(data.X.mean(), data.Y.mean(), str(basinID),
+                    ha="center", va="center", color="magenta")
+            ax.scatter(data.X, data.Y, s=0.05, color="white")
             
             
     def ExportBasinByPolygon(self,filename,polygons):
@@ -275,14 +326,14 @@ class loadDEMDiet:
             
         ax.scatter(self.riverData.X,self.riverData.Y,s=0.1,color='blue')
         
-    def PlotAll(self,ax=None,printNumberOfBasins=40):
+    def PlotAll(self,ax=None,numOfBasinsPrint=None):
         if ax is None:
             fig,ax=plt.subplots()
             
         self.PlotDEM(ax=ax)
         self.PlotRivers(ax=ax)
         #self.PlotDivded(ax=ax,printNumberOfBasins=printNumberOfBasins)
-        self.PlotDivdedByRivers(ax=ax)
+        self.PlotDivdedByRivers(ax=ax,printNumberOfBasins=numOfBasinsPrint)
         
         
     def ComputeBasinMaskFromRiverMask(self,riverMask):
