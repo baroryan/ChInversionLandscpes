@@ -21,6 +21,20 @@ def Rotate(x,y,theta):
 
     return xRotated,yRotated
 #%%
+def _as_1d_int_array(x, name="basinIDs"):
+    if np.isscalar(x):
+        x = np.array([x])
+    else:
+        x = np.asarray(x)
+
+    if x.ndim != 1:
+        raise ValueError(f"{name} must be a scalar, list, tuple, or 1D array")
+
+    if not np.issubdtype(x.dtype, np.integer):
+        raise ValueError(f"{name} must contain only integers, got dtype {x.dtype}")
+
+    return x
+#%%
 class loadDEMDiet:
     """
     Lightweight DEM wrapper for extracting drainage area, river networks, and basin masks.
@@ -142,7 +156,8 @@ class loadDEMDiet:
         
         
         return DEM_with_climate
-        
+    
+  
             
     def ReturnDEMWithClimateUsingGlobalClimateModel(self,espgCode):
         longs,lats=self.GetArrayCorr()
@@ -203,8 +218,11 @@ class loadDEMDiet:
             print(f"Did not get basinIDs, exporting all {len(self.riverData)} rivers", flush=True)
             rivers = self.riverData
             basinIDs = np.unique(self.riverData.basinID)
-
         else:
+            basinIDs = _as_1d_int_array(basinIDs)
+            if len(np.unique(basinIDs)) < len(basinIDs):
+                warnings.warn(f"Duplicate basinIDs found in input: {basinIDs}. Only unique basinIDs will be exported.", UserWarning)
+                basinIDs = np.unique(basinIDs)
             basinIDs = self.LocalBasinIDToBasinID(basinIDs)
             basinIDs = np.unique(np.array(basinIDs))
             rivers = self.riverData[self.riverData["basinID"].isin(basinIDs)]
