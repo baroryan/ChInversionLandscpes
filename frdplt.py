@@ -297,42 +297,37 @@ def ComputeChiForSoultion(f,soultion):
     return slope,chi,z
     
 #%%
-def PlotChiForSoultion(f,soultion,ax=None,riverColors=None,slopeColors=None):
+def PlotChiForSoultion(f, soultion, ax=None, riverColors=None, slopeColors=None):
+    if ax is None:
+        fig, ax = plt.subplots()
+
     if riverColors is None:
-        riverColors={'s':1,'color':'black','alpha':0.4}
+        riverColors = {"s": 1, "color": "black", "alpha": 0.4}
+
     if slopeColors is None:
-        slopeColors={'linewidth':0.75,'color':'gray'}
-        
-        
-    slope,chi,z=ComputeChiForSoultion(f,soultion)
-    # if ax is None:
-    #     fig,ax=plt.subplots()
-    
-    # m=f.Check_m_n(soultion[0])
-    # n=f.Check_m_n(soultion[1])
-    # slope=f.Check_slope(soultion[2])
-    
-    # if isinstance(f,frd.dietFoward1DWithK):
-    #     upliftParamters=f.SetKVecotrReturnUpliftParams(soultion)
-    # elif isinstance(f,frd.BsplineFoward1DOnlyUplift):
-    #     slope=f.Check_slope(soultion[0])
-    #     m=f.Check_m_n(f.m)
-    #     n=f.Check_m_n(f.n)
-    #     upliftParamters=soultion[1:]
-    # else:
-    #     upliftParamters=soultion[3:]
-        
+        slopeColors = {"linewidth": 0.75, "color": "gray"}
 
-    # chi,z=f.GetUpliftParamtersReturnChi(upliftParamters=upliftParamters,m=m,n=n)
-    
-    chi=chi/1e3
-    z=z/1e3
-    
-    x=np.linspace(0, np.nanmax(chi))
+    slope, chi, z = ComputeChiForSoultion(f, soultion)
 
-    ax.scatter(chi,z,**riverColors)
-    ax.plot(x,x*slope,**slopeColors) 
-    print("RMS:"+ str(np.round(ComputeRMS(slope*chi-z)*1e3,2)))
+    chi = chi / 1e3
+    z = z / 1e3
+
+    x = np.linspace(0, np.nanmax(chi))
+    rms = np.round(ComputeRMS(slope * chi - z) * 1e3, 1)
+
+    ax.scatter(chi, z, **riverColors)
+    ax.plot(x, x * slope, **slopeColors)
+
+    ax.text(
+        0.03, 0.97,
+        rf"RMS = {rms} m",
+        transform=ax.transAxes,
+        ha="left",
+        va="top",
+        fontsize=9,
+        bbox=dict(facecolor="white", alpha=0.7, edgecolor="none"),
+    )
+
 #%%    
 def GetHillShadeFromFoward(f,dx=30,dy=30):
     dx=dx;dy=dy;ny=f.shape[0];nx=f.shape[1]
