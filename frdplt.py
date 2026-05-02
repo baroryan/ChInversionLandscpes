@@ -245,7 +245,7 @@ class plotlandscapeAndInversion:
             
         extent=GetExtentFromFoward(self.f)
             
-        PlotFowardMapWithRiversNonSyn(ax=ax,plottinRivers=plottinRivers,f=self.f)
+        PlotFowardMapWithRivers(ax=ax,plottinRivers=plottinRivers,f=self.f)
         ax.imshow(self.climate,extent=extent,cmap='Blues',alpha=0.45)
         
 
@@ -253,7 +253,7 @@ class plotlandscapeAndInversion:
         
 
 #%%
-def PlotFowardMapWithRivers(f,ax=None,plottinRivers=None):
+def PlotFowardMapWithRiversSynLandscapes(f,ax=None,plottinRivers=None):
     if ax is None:
         fig,ax=plt.subplots()
     
@@ -264,7 +264,7 @@ def PlotFowardMapWithRivers(f,ax=None,plottinRivers=None):
     ax.scatter(f.Xrivers,100e3-f.Yrivers,**plottinRivers)
     
     
-def PlotFowardMapWithRiversNonSyn(f,ax=None,plottinRivers=None):
+def PlotFowardMapWithRivers(f,ax=None,plottinRivers=None):
     if ax is None:
         fig,ax=plt.subplots()
     
