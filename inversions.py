@@ -234,7 +234,7 @@ class newtonInversion:
         soultion_i=self.LoadSoultion(fowardModeling, m)
         
         totalImprovment=100
-        absoulteNormOld=0
+        absoulteNormOld=100
         absoulteNormInprovment=10
         print("Almost there...let the inversion begin!",flush=True)
         warnings.filterwarnings("once")
@@ -269,6 +269,7 @@ class newtonInversion:
             #stepMisfitImprovment=totalImprovmentOld-totalImprovment
             if i>1:
                 stepMisfitImprovment=(self.misfitForStep[-2]-self.misfitForStep[-1])/self.misfitForStep[-2]
+                
             absoulteNormInprovment=absoulteNormOld-totalImprovment
             absoulteNormOld=totalImprovment.copy()
             #totalImprovmentOld=totalImprovment.copy()
