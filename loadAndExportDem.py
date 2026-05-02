@@ -78,7 +78,7 @@ class loadDEMDiet:
         # dem.compute_river_nodes()
 
         print("Getting rivers...",flush=True)
-        self.riverData = self.AddLocalBasinID(pd.DataFrame(dem.quick_river_network(A0)))
+        self.riverData,self.basinMapping = self.AddLocalBasinID(pd.DataFrame(dem.quick_river_network(A0)))
         self.continentalDivide,self.basinID=dem.quick_basin_extraction(return_basinID = True)
         self.continentalDivide=pd.DataFrame(self.continentalDivide)
         self.RemoveBasinsTouchingBoundries(self.basinID)
@@ -103,17 +103,12 @@ class loadDEMDiet:
         # self.riversData=pd.DataFrame(riversData)
     
     def AddLocalBasinID(self,riverData):
-        """
-        Add localBasinID to a riverData DataFrame and return the updated DataFrame.
-
-        The largest basin gets localBasinID = 0, the next largest gets 1, etc.
-        """
         riverData = riverData.copy()
-
         basinCounts = riverData.groupby("basinID").size().sort_values(ascending=False)
-        basinIDToLocalID = pd.Series(np.arange(len(basinCounts)), index=basinCounts.index, name="localBasinID")
-        riverData["localBasinID"] = riverData["basinID"].map(basinIDToLocalID).astype(int)
-        return riverData
+        basinMapping = pd.DataFrame({"basinID": basinCounts.index, "localBasinID": np.arange(len(basinCounts)), "numberOfRiverNodes": basinCounts.values})
+        riverData = riverData.merge(basinMapping[["basinID", "localBasinID"]], on="basinID", how="left")
+
+        return riverData, basinMapping
     
     
     def _validate_inputs(self,demFilename, Z0, A0):
@@ -158,8 +153,20 @@ class loadDEMDiet:
         DEM_with_climate=self.ReturnDEMWithClimate(raindfallLocal)
         return DEM_with_climate,climatePatternForDEM
         
-        
-        
+    
+    def LocalBasinIDToBasinID(self, localBasinID):
+        localBasinID = np.atleast_1d(localBasinID)
+
+        basinIDs = self.basinMapping.loc[
+            self.basinMapping["localBasinID"].isin(localBasinID),
+            "basinID"
+        ].to_numpy()
+
+        if len(basinIDs) != len(localBasinID):
+            missing = np.setdiff1d(localBasinID, self.basinMapping["localBasinID"].to_numpy())
+            raise ValueError(f"localBasinID not found in basinMapping: {missing}")
+
+        return basinIDs
         
     def RemoveBasinsTouchingBoundries(self,basinIDperPixel):
         pass
@@ -198,6 +205,7 @@ class loadDEMDiet:
             basinIDs = np.unique(self.riverData.basinID)
 
         else:
+            basinIDs = self.LocalBasinIDToBasinID(basinIDs)
             basinIDs = np.unique(np.array(basinIDs))
             rivers = self.riverData[self.riverData["basinID"].isin(basinIDs)]
 
@@ -328,22 +336,20 @@ class loadDEMDiet:
         if ax is None:
             fig, ax = plt.subplots()
 
-        basinIDToPlot = pd.unique(self.riverData.basinID)
+        localBasinIDToPlot = self.basinMapping["localBasinID"].to_numpy()
 
         if printNumberOfBasins is not None:
-            basin_sizes = self.continentalDivide[
-                self.continentalDivide.basinID.isin(basinIDToPlot)
-            ].groupby("basinID").size().sort_values(ascending=False)
+            localBasinIDToPlot = localBasinIDToPlot[:printNumberOfBasins]
 
-            basinIDToPlot = basin_sizes.index[:printNumberOfBasins]
+        for localBasinID in localBasinIDToPlot:
+            basinID = self.LocalBasinIDToBasinID(localBasinID)[0]
 
-        for basinID in basinIDToPlot:
-            data = self.continentalDivide[self.continentalDivide.basinID == basinID]
+            data = self.continentalDivide[
+                self.continentalDivide.basinID == basinID
+            ]
             if data.empty:
                 continue
-
-            ax.text(data.X.mean(), data.Y.mean(), str(basinID),
-                    ha="center", va="center", color="magenta")
+            ax.text(data.X.mean(), data.Y.mean(), str(localBasinID), ha="center", va="center", color="magenta")
             ax.scatter(data.X, data.Y, s=0.05, color="white")
             
             
