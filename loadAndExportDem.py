@@ -78,7 +78,7 @@ class loadDEMDiet:
         # dem.compute_river_nodes()
 
         print("Getting rivers...",flush=True)
-        self.riverData = pd.DataFrame(dem.quick_river_network(A0))
+        self.riverData = self.AddLocalBasinID(pd.DataFrame(dem.quick_river_network(A0)))
         self.continentalDivide,self.basinID=dem.quick_basin_extraction(return_basinID = True)
         self.continentalDivide=pd.DataFrame(self.continentalDivide)
         self.RemoveBasinsTouchingBoundries(self.basinID)
@@ -101,7 +101,21 @@ class loadDEMDiet:
 
         # riversData = {**dem.get_rivers_dict(), **dem.get_rivers_rowcolnode()}
         # self.riversData=pd.DataFrame(riversData)
+    
+    def AddLocalBasinID(self,riverData):
+        """
+        Add localBasinID to a riverData DataFrame and return the updated DataFrame.
 
+        The largest basin gets localBasinID = 0, the next largest gets 1, etc.
+        """
+        riverData = riverData.copy()
+
+        basinCounts = riverData.groupby("basinID").size().sort_values(ascending=False)
+        basinIDToLocalID = pd.Series(np.arange(len(basinCounts)), index=basinCounts.index, name="localBasinID")
+        riverData["localBasinID"] = riverData["basinID"].map(basinIDToLocalID).astype(int)
+        return riverData
+    
+    
     def _validate_inputs(self,demFilename, Z0, A0):
         if not Path(demFilename).exists():
             raise ValueError(f"demFilename does not exist: {demFilename}")
