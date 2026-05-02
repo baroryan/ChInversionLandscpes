@@ -340,28 +340,34 @@ def GetHillShadeFromFoward(f,dx=30,dy=30):
     return grid.hillshade.reshape(f.shape)
 
 #%%
-def PlotTopoGraphyFromFowardModel(f,ax=None,extent=None,basinMask=None):
-    if ax is None:
-        fig,ax=plt.subplots()
-    hillShade=GetHillShadeFromFoward(f)
-    
+def PlotTopoGraphyFromFowardModel(f, ax=None, extent=None, basinMask=None, fig_width=10):
     if extent is None:
-        extent=GetExtentFromFoward(f)
-    zmin=np.nanmin(f.Z);zmax=np.nanmax(f.Z)
+        extent = GetExtentFromFoward(f)
+
+    if ax is None:
+        xmin, xmax, ymin, ymax = extent
+        fig_height = fig_width * (ymax - ymin) / (xmax - xmin)
+        fig, ax = plt.subplots(figsize=(fig_width, fig_height))
+
+    hillShade = GetHillShadeFromFoward(f)
+
+    zmin = np.nanmin(f.Z)
+    zmax = np.nanmax(f.Z)
+
     if basinMask is None:
-        Z=f.Z.reshape(f.shape)
-        hillShade=hillShade
+        Z = f.Z.reshape(f.shape)
     else:
-        
-        Z=f.Z.copy()
-        Z[~basinMask]=np.nan
-        Z=Z.reshape(f.shape)
-        hillShade=hillShade.flatten()
-        hillShade[~basinMask]=np.nan
-        hillShade=hillShade.reshape(f.shape)
-    #extent=[np.min(f.XXflat),np.max(f.XXflat),np.min(f.YYflat),np.max(f.YYflat)]
-    ax.imshow(Z,extent=extent,cmap="gist_earth",vmin=np.nanmin(f.Z),vmax=np.nanmax(f.Z))
-    ax.imshow(hillShade,extent=extent,cmap='gray',alpha=0.6)
+        Z = f.Z.copy()
+        Z[~basinMask] = np.nan
+        Z = Z.reshape(f.shape)
+
+        hillShade = hillShade.flatten()
+        hillShade[~basinMask] = np.nan
+        hillShade = hillShade.reshape(f.shape)
+
+    ax.imshow(Z, extent=extent, cmap="gist_earth", vmin=zmin, vmax=zmax)
+    ax.imshow(hillShade, extent=extent, cmap="gray", alpha=0.6)
+
 #%%     
 def ComputeRMS(vector):
     return np.sqrt(np.mean(vector**2))  
