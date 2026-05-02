@@ -4,11 +4,12 @@ import dagger as dag
 import scabbard as scb
 import pandas as pd
 from pathlib import Path
-import shapely.geometry
+#import shapely.geometry
 #import globalClimateModel
 #import miscFunctions
 import pointsInSidePoly
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+import warnings
 #%%
 def Rotate(x,y,theta):
     x=np.array(x)
@@ -21,9 +22,30 @@ def Rotate(x,y,theta):
     return xRotated,yRotated
 #%%
 class loadDEMDiet:
-    """ currrently I am stcuk and not sure how to export the data - because for the inversion I will need to only use river
-    data but for the entrie DEM to show results I will need the whole DEM or part of it"""
+    """
+    Lightweight DEM wrapper for extracting drainage area, river networks, and basin masks.
 
+    The class loads a DEM with Scabbard, computes single-flow-direction drainage routing,
+    extracts river nodes above a drainage-area threshold, identifies basins, and provides
+    helper methods for exporting DEM/routing arrays, selecting basins by ID or polygon,
+    and plotting the DEM, rivers, and basin labels.
+
+    Parameters
+    ----------
+    demFilename : str or path-like
+        Path to the input DEM raster.
+    Z0 : float, default=1000
+        Minimum/reference elevation used during DEM preprocessing and plotting.
+    A0 : float, default=2e7
+        Drainage-area threshold used to extract river nodes. Must be larger than 0.
+    minimalSlope : float, default=1e-3
+        Minimal slope parameter kept for compatibility; currently not applied directly.
+    ftype : numpy dtype, default=np.float64
+        Floating-point type used for stored numerical arrays.
+    precipitation : ndarray, optional
+        Spatial precipitation/runoff field with the same shape as the DEM. If provided,
+        drainage area is weighted by this field instead of using constant accumulation.
+    """
     def __init__(self,demFilename,Z0=1000,A0=2e7,minimalSlope=1e-3,ftype=np.float64,precipitation=None):
         self.ftype=ftype
         self.demFilename=demFilename
@@ -157,23 +179,36 @@ class loadDEMDiet:
         y=y.astype(self.ftype)
         
         if basinIDs is None:
+            print(f"Did not get basinIDs, exporting all {len(self.riverData)} rivers", flush=True)
             rivers = self.riverData
-            pixelMask=None
+            basinIDs = np.unique(self.riverData.basinID)
+
         else:
-            basinIDs=np.unique(np.array(basinIDs))
-            rivers = self.riverData[self.riverData['basinID'].isin(basinIDs)]
-            pixelMask=np.isin(self.basinID.ravel(),basinIDs)
-        
+            basinIDs = np.unique(np.array(basinIDs))
+            rivers = self.riverData[self.riverData["basinID"].isin(basinIDs)]
+
+            if rivers.empty:
+                raise ValueError(f"No rivers found for basinIDs: {basinIDs}")
+
+            exportedBasinIDs = np.unique(rivers["basinID"].to_numpy())
+            missingBasinIDs = np.setdiff1d(basinIDs, exportedBasinIDs)
+
+            print(f"Exporting {len(rivers)} rivers in {len(exportedBasinIDs)} basins", flush=True)
+            
+            if len(missingBasinIDs) > 0:
+                warnings.warn(
+                    f"Missing basinIDs in exported file: {missingBasinIDs}. "
+                    "Are you sure you want to continue?",
+                    UserWarning,
+                )
         mask=self.GenerateMaskForRiverID(rivers.nodes)
-        
-        
-        
+        pixelMask = np.isin(self.basinID.ravel(), basinIDs)
+
         np.savez_compressed(filename,origFilanme=self.demFilename, A=self.A, dX=self.dX, Z=self.Z, recs=self.recs
                ,stack=self.stack,minElevation=self.Z0, minDraingeArea=self.A0,XXflat=x,YYflat=y,riverMask=mask,pixelMask=pixelMask,
                riverNodes=self.riverData['nodes'],shape=[self.dem.ny,self.dem.nx])
         
-        
-        #return mask
+        return mask
 
 
     def GenerateMaskForRiverID(self, riverNodes=None):
