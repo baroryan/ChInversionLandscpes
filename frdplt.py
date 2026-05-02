@@ -340,7 +340,7 @@ def GetHillShadeFromFoward(f,dx=30,dy=30):
     return grid.hillshade.reshape(f.shape)
 
 #%%
-def PlotTopoGraphyFromFowardModel(f, ax=None, extent=None, basinMask=None, fig_width=10):
+def PlotTopoGraphyFromFowardModel(f, ax=None, extent=None, basinMask=None, fig_width=5):
     if extent is None:
         extent = GetExtentFromFoward(f)
 
