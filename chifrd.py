@@ -48,7 +48,7 @@ def ComputeAICandBIC(fowardModelFilename,kx,Cm_list,angle=None,splineDegree=3,**
             
 
 #%%
-def InvertLandScape(foward,d_inital=10,m_initial=1,randomNoise=10,minStepImprovement=0.1,mu=0.5,numOf1DParamters=None,maxIterations=45,Cm=None,m0=None,spraseMatrix=False,Cdinv=None,Cd=None,std_m_n_as=0.1):
+def InvertLandScape(foward,d_inital=10,m_initial=1,randomNoise=0,minStepImprovement=0.1,mu=0.1,numOf1DParamters=None,maxIterations=50,Cm=None,m0=None,spraseMatrix=False,Cdinv=None,Cd=None,std_m_n=0.1,std_as=0.5):
     print("Setting paramters for inversions",flush=True)
     m=0.5;n=1;slope=0.1
     #foward=fowardProp.LoafDietFowardBspline2D(fowardModelFilename,kx=kx,ky=ky)
@@ -92,9 +92,9 @@ def InvertLandScape(foward,d_inital=10,m_initial=1,randomNoise=10,minStepImprove
     
     std=np.ones_like(m0)*m_initial
     std=std.astype(np.float64)
-    std[0]=std_m_n_as
-    std[1]=std_m_n_as
-    std[2]=std_m_n_as
+    std[0]=std_m_n
+    std[1]=std_m_n
+    std[2]=std_as
     
     
     m0=m0.astype(np.float64)
