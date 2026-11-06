@@ -209,7 +209,10 @@ class loadDEMDiet:
         np.savez(filename,origFilanme=self.demFilename, A=self.A[mask], dX=self.dX[mask], Z=self.Z[mask], recs=self.recs
                  ,stack=self.stack,minElevation=self.Z0, minDraingeArea=self.A0,X=x[mask],Y=y[mask])
         
-    def ExportByBasins(self,filename,basinIDs=None):
+    def ExportByBasins(self,filename,basinIDs=None,basinIDType="local"):
+        """basinIDType: "local" (localBasinID from basinMapping, default) or "global" (dagger basinID)."""
+        if basinIDType not in ("local", "global"):
+            raise ValueError(f"basinIDType must be 'local' or 'global', got {basinIDType!r}")
         x,y=self.GetFlatCorr()
         x=x.astype(self.ftype)
         y=y.astype(self.ftype)
@@ -223,7 +226,8 @@ class loadDEMDiet:
             if len(np.unique(basinIDs)) < len(basinIDs):
                 warnings.warn(f"Duplicate basinIDs found in input: {basinIDs}. Only unique basinIDs will be exported.", UserWarning)
                 basinIDs = np.unique(basinIDs)
-            basinIDs = self.LocalBasinIDToBasinID(basinIDs)
+            if basinIDType == "local":
+                basinIDs = self.LocalBasinIDToBasinID(basinIDs)
             basinIDs = np.unique(np.array(basinIDs))
             rivers = self.riverData[self.riverData["basinID"].isin(basinIDs)]
 
@@ -389,7 +393,7 @@ class loadDEMDiet:
         basinWithRivers=np.unique(self.riverData.basinID)
         
         basinToExport=np.intersect1d(basinInPolygons,basinWithRivers)
-        self.ExportByBasins(filename,basinIDs=basinToExport)
+        self.ExportByBasins(filename,basinIDs=basinToExport,basinIDType="global")
         
         return basinToExport,self.BasinMask(basinToExport)
     
