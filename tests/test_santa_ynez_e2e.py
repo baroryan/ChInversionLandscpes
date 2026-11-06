@@ -65,3 +65,29 @@ def test_shipped_forward_model_loads():
 
     f = chifrd.LoadFowardModel(str(SHIPPED_MODEL), kx=1, ky=1)
     assert f is not None
+
+
+# Verified run (Bar, 2026-11-06): examples/frdModels/sy_centralBasins.npz, kx=1, ky=1,
+# chifrd.InvertLandScape(f_2d, std_m_n=0.05). Values are the printed "total misfit" after
+# iterations 1..23, i.e. 100 * misfit / initial misfit; the run stopped at i = 24.
+VERIFIED_MISFIT_PERCENT = [
+    42.65, 38.76, 35.03, 27.28, 25.58, 22.50, 20.07, 18.07, 16.41, 15.06, 13.89, 12.93,
+    12.14, 11.49, 10.96, 10.54, 10.19, 9.91, 9.69, 9.51, 9.36, 9.25, 9.15,
+]
+# printed values are rounded to 2 decimals; allow a little extra for platform differences
+MISFIT_TOLERANCE = 0.05
+
+
+def test_santa_ynez_inversion_matches_verified_run():
+    import chifrd
+
+    f_2d = chifrd.LoadFowardModel(str(SHIPPED_MODEL), kx=1, ky=1)
+    inversion = chifrd.InvertLandScape(f_2d, std_m_n=0.05)
+
+    misfit = np.asarray(inversion.misfitForStep)
+    misfit_percent = 100 * misfit[1:] / misfit[0]
+
+    assert len(inversion.step) == len(VERIFIED_MISFIT_PERCENT) + 1, (
+        f"stopped after {len(inversion.step) - 1} iterations, verified run took {len(VERIFIED_MISFIT_PERCENT)}"
+    )
+    np.testing.assert_allclose(misfit_percent, VERIFIED_MISFIT_PERCENT, atol=MISFIT_TOLERANCE)
