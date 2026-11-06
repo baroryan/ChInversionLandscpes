@@ -354,7 +354,7 @@ class loadDEMDiet:
             data=self.continentalDivide.loc[self.continentalDivide.basinID==uniqueID_i]
             ax.text(np.mean(data.X),np.mean(data.Y),str(uniqueID_i),ha='center', va='center')
             
-    def PlotDivdedByRivers(self, ax=None, printNumberOfBasins=None):
+    def PlotDivdedByRivers(self, ax=None, printNumberOfBasins=None, plotAllPerimeters=True):
         if ax is None:
             fig, ax = plt.subplots()
 
@@ -362,6 +362,11 @@ class loadDEMDiet:
 
         if printNumberOfBasins is not None:
             localBasinIDToPlot = localBasinIDToPlot[:printNumberOfBasins]
+
+        if plotAllPerimeters:
+            # outlines of every basin that has rivers, regardless of how many are labeled
+            allDivides = self.continentalDivide[self.continentalDivide.basinID.isin(self.basinMapping["basinID"])]
+            ax.scatter(allDivides.X, allDivides.Y, s=0.05, color="white")
 
         for localBasinID in localBasinIDToPlot:
             basinID = self.LocalBasinIDToBasinID(localBasinID)[0]
@@ -372,7 +377,8 @@ class loadDEMDiet:
             if data.empty:
                 continue
             ax.text(data.X.mean(), data.Y.mean(), str(localBasinID), ha="center", va="center", color="magenta")
-            ax.scatter(data.X, data.Y, s=0.05, color="white")
+            if not plotAllPerimeters:
+                ax.scatter(data.X, data.Y, s=0.05, color="white")
             
             
     def ExportBasinByPolygon(self,filename,polygons):
@@ -410,14 +416,14 @@ class loadDEMDiet:
             
         ax.scatter(self.riverData.X,self.riverData.Y,s=0.1,color='blue')
         
-    def PlotAll(self,ax=None,numOfBasinsPrint=None):
+    def PlotAll(self,ax=None,numOfBasinsPrint=None,plotAllPerimeters=True):
         if ax is None:
             fig,ax=plt.subplots()
             
         self.PlotDEM(ax=ax)
         self.PlotRivers(ax=ax)
         #self.PlotDivded(ax=ax,printNumberOfBasins=printNumberOfBasins)
-        self.PlotDivdedByRivers(ax=ax,printNumberOfBasins=numOfBasinsPrint)
+        self.PlotDivdedByRivers(ax=ax,printNumberOfBasins=numOfBasinsPrint,plotAllPerimeters=plotAllPerimeters)
         
         
     def ComputeBasinMaskFromRiverMask(self,riverMask):
