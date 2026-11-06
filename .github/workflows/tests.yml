@@ -1,0 +1,52 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+env:
+  MPLBACKEND: Agg
+
+jobs:
+  fast:
+    name: Fast checks (no dagger)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install light dependencies
+        run: pip install numpy pandas matplotlib scipy numba pytest
+      - name: Run tests
+        run: pytest tests -v
+
+  full:
+    name: Santa Ynez end-to-end (full environment)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -el {0}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          activate-environment: invertchi
+          python-version: "3.11"
+          channels: conda-forge
+          conda-remove-defaults: true
+      - name: Install environment (same recipe as the README)
+        run: |
+          conda install -y -c conda-forge xtensor-python pip
+          pip install taichi
+          pip install numba
+          pip install daggerpy
+          pip install pyscabbard
+          pip install numpy matplotlib xarray seaborn
+          pip install "setuptools<81" --force-reinstall
+          pip install pytest
+      - name: Check dagger imports
+        run: python -c "import dagger, scabbard; print('dagger + scabbard OK')"
+      - name: Run tests
+        run: pytest tests -v
