@@ -91,3 +91,7 @@ Icon?
 # Windows
 Thumbs.db
 Desktop.ini
+
+# Example data shipped with the repo (exceptions to the *.tif / *.npz rules above)
+!examples/DEMs/santa_ynez.tif
+!examples/frdModels/sy_centralBasins.npz
